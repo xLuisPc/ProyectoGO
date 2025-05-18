@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Estudiantes</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+    <nav>
+        <button onclick="location.href='/'">Inicio</button>
+        <button onclick="location.href='/add'">Añadir estudiante</button>
+        <button onclick="location.href='/predict'">Predicción</button>
+        <button onclick="location.href='/stats'">Estadísticas</button>
+    </nav>
+</header>
+
+<main>
+    <h1>Estudiantes</h1>
+    <table id="tabla-estudiantes" border="1">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Carrera</th>
+            <th>Acción</th>
+            <th>Ciencia ficción</th>
+            <th>Comedia</th>
+            <th>Terror</th>
+            <th>Documental</th>
+            <th>Romance</th>
+            <th>Musicales</th>
+            <th>POO</th>
+            <th>Cálculo Multivariado</th>
+            <th>CTD</th>
+            <th>Ingeniería de software</th>
+            <th>Bases de datos</th>
+            <th>Control Análogo</th>
+            <th>Circuitos Digitales</th>
+            <th>Promedio</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Se llenará dinámicamente -->
+        </tbody>
+    </table>
+</main>
+
+<script src="/static/main.js"></script>
+</body>
+</html>
