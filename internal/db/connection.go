@@ -15,7 +15,7 @@ func ConnectDB() {
 		port     = 5432
 		user     = "postgres"
 		password = "rIjtdMpRegkyAbfcaaQeYHzvqjvwvBjr"
-		dbname   = "persona"
+		dbname   = "railway"
 	)
 
 	psqlInfo := fmt.Sprintf(
