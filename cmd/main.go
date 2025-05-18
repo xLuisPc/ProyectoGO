@@ -38,7 +38,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Error creando la tabla:", err)
 	} else {
-		log.Println("Tabla creada exitosamente.")
+		log.Println("✅ Tabla creada exitosamente.")
 	}
 
 	log.Println("Servidor en http://localhost:8080")
