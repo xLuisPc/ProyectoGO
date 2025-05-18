@@ -11,11 +11,11 @@ var DB *sql.DB
 
 func ConnectDB() {
 	const (
-		host     = "tu-host.railway.app"
+		host     = "postgres.railway.internal"
 		port     = 5432
-		user     = "tu-usuario"
-		password = "tu-password"
-		dbname   = "tu-nombre-de-base"
+		user     = "postgres"
+		password = "rIjtdMpRegkyAbfcaaQeYHzvqjvwvBjr"
+		dbname   = "persona"
 	)
 
 	psqlInfo := fmt.Sprintf(
