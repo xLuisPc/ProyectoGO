@@ -21,7 +21,7 @@ func main() {
 			db.DropTable()
 			return
 		case "agg-100":
-			db.Agregar100Personas(db.DB, "../estudiantes_aleatorios.json")
+			db.Agregar100Personas(db.DB, "C:\\Users\\luigi\\Desktop\\GOProyect\\estudiantes_aleatorios.json")
 			return
 		}
 	}
