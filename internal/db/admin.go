@@ -1,16 +1,12 @@
-package main
+package db
 
 import (
 	"log"
-
-	"github.com/xLuisPc/ProyectoGO/internal/db"
 )
 
-func main() {
-	db.ConnectDB()
-
+func CreateTable() {
 	query := `
-	CREATE TABLE IF NOT EXISTS personas (
+	CREATE TABLE IF NOT EXISTS DBPersonas (
 		id SERIAL PRIMARY KEY,
 		carrera TEXT,
 		genero_accion INTEGER,
@@ -30,11 +26,19 @@ func main() {
 		promedio REAL
 	);
 	`
-
-	_, err := db.DB.Exec(query)
+	_, err := DB.Exec(query)
 	if err != nil {
 		log.Fatalf("❌ Error creando la tabla: %v", err)
 	} else {
-		log.Println("✅ Tabla 'personas' creada exitosamente.")
+		log.Println("✅ Tabla creada exitosamente.")
+	}
+}
+
+func DropTable() {
+	_, err := DB.Exec("DROP TABLE IF EXISTS personas;")
+	if err != nil {
+		log.Fatalf("❌ Error eliminando la tabla: %v", err)
+	} else {
+		log.Println("✅ Tabla  eliminada exitosamente.")
 	}
 }

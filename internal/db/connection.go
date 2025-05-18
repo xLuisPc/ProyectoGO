@@ -3,9 +3,8 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"log"
-
 	_ "github.com/lib/pq"
+	"log"
 )
 
 var DB *sql.DB
@@ -24,8 +23,8 @@ func ConnectDB() {
 		host, port, user, password, dbname,
 	)
 
-	var err error // declarar err antes
-	DB, err = sql.Open("postgres", psqlInfo)
+	var err error
+	DB, err = sql.Open("postgres", psqlInfo) // ✅ Usa la variable global
 	if err != nil {
 		log.Fatalf("Error al abrir la base de datos: %v", err)
 	}
