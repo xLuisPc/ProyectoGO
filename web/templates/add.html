@@ -3,49 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <title>Añadir Estudiante</title>
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-<h1>Añadir Estudiante</h1>
+<h1>Añadir nuevo estudiante</h1>
 <form id="form-estudiante">
-    <label>Carrera: <input type="text" name="carrera" required></label><br><br>
+    <!-- Carrera -->
+    <label for="carrera">Carrera:</label>
+    <select id="carrera" name="carrera" required>
+        <option value="">Seleccione una opción</option>
+        <option value="Ingeniería de Sistemas">Ingeniería de Sistemas</option>
+        <option value="Ingeniería Electrónica">Ingeniería Electrónica</option>
+    </select><br><br>
 
-    <h3>Preferencia de Géneros (0-5)</h3>
-    <label>Acción: <input type="number" name="genero_accion" min="0" max="5"></label><br>
-    <label>Ciencia ficción: <input type="number" name="genero_ciencia_ficcion" min="0" max="5"></label><br>
-    <label>Comedia: <input type="number" name="genero_comedia" min="0" max="5"></label><br>
-    <label>Terror: <input type="number" name="genero_terror" min="0" max="5"></label><br>
-    <label>Documental: <input type="number" name="genero_documental" min="0" max="5"></label><br>
-    <label>Romance: <input type="number" name="genero_romance" min="0" max="5"></label><br>
-    <label>Musicales: <input type="number" name="genero_musicales" min="0" max="5"></label><br><br>
+    <!-- Gustos por género -->
+    <fieldset>
+        <legend>Preferencia por géneros (0 a 10)</legend>
+        <label>Acción: <input type="number" id="genero_accion" min="0" max="10" required></label><br>
+        <label>Ciencia ficción: <input type="number" id="genero_ciencia_ficcion" min="0" max="10" required></label><br>
+        <label>Comedia: <input type="number" id="genero_comedia" min="0" max="10" required></label><br>
+        <label>Terror: <input type="number" id="genero_terror" min="0" max="10" required></label><br>
+        <label>Documental: <input type="number" id="genero_documental" min="0" max="10" required></label><br>
+        <label>Romance: <input type="number" id="genero_romance" min="0" max="10" required></label><br>
+        <label>Musicales: <input type="number" id="genero_musicales" min="0" max="10" required></label><br>
+    </fieldset><br>
 
-    <h3>Notas (0-20)</h3>
-    <label>POO: <input type="number" name="poo" step="0.1" min="0" max="20"></label><br>
-    <label>Cálculo Multivariado: <input type="number" name="calculo_multivariado" step="0.1" min="0" max="20"></label><br>
-    <label>CTD: <input type="number" name="ctd" step="0.1" min="0" max="20"></label><br>
-    <label>Ingeniería de Software: <input type="number" name="ingenieria_software" step="0.1" min="0" max="20"></label><br>
-    <label>Bases de Datos: <input type="number" name="bases_datos" step="0.1" min="0" max="20"></label><br>
-    <label>Control Análogo: <input type="number" name="control_analogo" step="0.1" min="0" max="20"></label><br>
-    <label>Circuitos Digitales: <input type="number" name="circuitos_digitales" step="0.1" min="0" max="20"></label><br><br>
+    <!-- Notas -->
+    <fieldset>
+        <legend>Notas (0 a 5)</legend>
+        <label>POO: <input type="number" id="poo" step="0.1" min="0" max="5" required></label><br>
+        <label>Cálculo Multivariado: <input type="number" id="calculo_multivariado" step="0.1" min="0" max="5" required></label><br>
+        <label>CTD: <input type="number" id="ctd" step="0.1" min="0" max="5" required></label><br>
+        <label>Ingeniería de Software: <input type="number" id="ingenieria_software" step="0.1" min="0" max="5" required></label><br>
+        <label>Bases de Datos: <input type="number" id="bases_datos" step="0.1" min="0" max="5" required></label><br>
+        <label>Control Análogo: <input type="number" id="control_analogo" step="0.1" min="0" max="5" required></label><br>
+        <label>Circuitos Digitales: <input type="number" id="circuitos_digitales" step="0.1" min="0" max="5" required></label><br>
+    </fieldset><br>
 
     <button type="submit">Guardar</button>
 </form>
 
 <script>
-    document.getElementById("form-estudiante").addEventListener("submit", async function (e) {
+    document.getElementById("form-estudiante").addEventListener("submit", async (e) => {
         e.preventDefault();
-        const formData = new FormData(e.target);
-        const data = {};
-        formData.forEach((value, key) => {
-            data[key] = isNaN(value) ? value : parseFloat(value);
-        });
+
+        const getValue = id => document.getElementById(id).value;
+
+        const estudiante = {
+            carrera: getValue("carrera"),
+            genero_accion: parseInt(getValue("genero_accion")),
+            genero_ciencia_ficcion: parseInt(getValue("genero_ciencia_ficcion")),
+            genero_comedia: parseInt(getValue("genero_comedia")),
+            genero_terror: parseInt(getValue("genero_terror")),
+            genero_documental: parseInt(getValue("genero_documental")),
+            genero_romance: parseInt(getValue("genero_romance")),
+            genero_musicales: parseInt(getValue("genero_musicales")),
+            poo: parseFloat(getValue("poo")),
+            calculo_multivariado: parseFloat(getValue("calculo_multivariado")),
+            ctd: parseFloat(getValue("ctd")),
+            ingenieria_software: parseFloat(getValue("ingenieria_software")),
+            bases_datos: parseFloat(getValue("bases_datos")),
+            control_analogo: parseFloat(getValue("control_analogo")),
+            circuitos_digitales: parseFloat(getValue("circuitos_digitales"))
+        };
+
+        // Validación extra (por seguridad)
+        const validNota = n => n >= 0 && n <= 5;
+        const validGenero = g => g >= 0 && g <= 10;
+        const notas = [
+            estudiante.poo, estudiante.calculo_multivariado, estudiante.ctd,
+            estudiante.ingenieria_software, estudiante.bases_datos,
+            estudiante.control_analogo, estudiante.circuitos_digitales
+        ];
+        const generos = [
+            estudiante.genero_accion, estudiante.genero_ciencia_ficcion,
+            estudiante.genero_comedia, estudiante.genero_terror,
+            estudiante.genero_documental, estudiante.genero_romance,
+            estudiante.genero_musicales
+        ];
+
+        if (!notas.every(validNota) || !generos.every(validGenero)) {
+            alert("Verifica que las notas estén entre 0-5 y los géneros entre 0-10.");
+            return;
+        }
 
         const res = await fetch("/api/estudiantes", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data)
+            body: JSON.stringify(estudiante)
         });
 
         if (res.ok) {
             alert("Estudiante añadido correctamente");
             window.location.href = "/";
         } else {
+            const msg = await res.text();
+            alert("Error al guardar: " + msg);
+        }
+    });
+</script>
+</body>
+</html>
