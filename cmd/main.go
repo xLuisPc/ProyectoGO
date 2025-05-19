@@ -27,6 +27,7 @@ func main() {
 	}
 
 	http.HandleFunc("/personas", handlers.CrearPersona)
+
 	http.HandleFunc("/api/estudiantes", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			handlers.ListarPersonas(w, r)
@@ -37,9 +38,20 @@ func main() {
 		}
 	})
 
+	// Archivos estáticos (JS, CSS)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
 
+	// Ruta para añadir estudiantes
+	http.HandleFunc("/add", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "web/templates/add.html")
+	})
+
+	// Ruta principal (solo raíz "/")
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
 		http.ServeFile(w, r, "web/templates/index.html")
 	})
 

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/xLuisPc/ProyectoGO/internal/db"
 	"github.com/xLuisPc/ProyectoGO/internal/models"
+	"log"
 	"net/http"
 )
 
@@ -23,7 +24,7 @@ func CrearPersona(w http.ResponseWriter, r *http.Request) {
 	// Calcular promedio
 	suma := persona.Poo + persona.CalculoMultivariado + persona.Ctd + persona.IngenieriaSoftware +
 		persona.BasesDatos + persona.ControlAnalogo + persona.CircuitosDigitales
-	persona.Promedio = suma / 7
+	persona.Promedio = suma / 5
 
 	query := `
         INSERT INTO personas (
@@ -70,8 +71,9 @@ func ListarPersonas(w http.ResponseWriter, r *http.Request) {
         id, carrera, genero_accion, genero_ciencia_ficcion, genero_comedia, genero_terror,
         genero_documental, genero_romance, genero_musicales,
         poo, calculo_multivariado, ctd, ingenieria_software, bases_datos,
-        control_analogo, circuitos_digitales, promedio FROM personas`)
+        control_analogo, circuitos_digitales, promedio FROM dbpersonas`)
 	if err != nil {
+		log.Println("ERROR CONSULTA:", err) // Aquí se imprime el error en consola
 		http.Error(w, "Error al consultar la base de datos", http.StatusInternalServerError)
 		return
 	}
@@ -89,6 +91,7 @@ func ListarPersonas(w http.ResponseWriter, r *http.Request) {
 			&p.ControlAnalogo, &p.CircuitosDigitales, &p.Promedio,
 		)
 		if err != nil {
+			log.Println("ERROR SCAN:", err) // También puedes agregar esto por si hay error al leer filas
 			http.Error(w, "Error al leer resultados", http.StatusInternalServerError)
 			return
 		}

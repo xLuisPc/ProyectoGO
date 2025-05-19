@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Añadir Estudiante</title>
+</head>
+<body>
+<h1>Añadir Estudiante</h1>
+<form id="form-estudiante">
+    <label>Carrera: <input type="text" name="carrera" required></label><br><br>
+
+    <h3>Preferencia de Géneros (0-5)</h3>
+    <label>Acción: <input type="number" name="genero_accion" min="0" max="5"></label><br>
+    <label>Ciencia ficción: <input type="number" name="genero_ciencia_ficcion" min="0" max="5"></label><br>
+    <label>Comedia: <input type="number" name="genero_comedia" min="0" max="5"></label><br>
+    <label>Terror: <input type="number" name="genero_terror" min="0" max="5"></label><br>
+    <label>Documental: <input type="number" name="genero_documental" min="0" max="5"></label><br>
+    <label>Romance: <input type="number" name="genero_romance" min="0" max="5"></label><br>
+    <label>Musicales: <input type="number" name="genero_musicales" min="0" max="5"></label><br><br>
+
+    <h3>Notas (0-20)</h3>
+    <label>POO: <input type="number" name="poo" step="0.1" min="0" max="20"></label><br>
+    <label>Cálculo Multivariado: <input type="number" name="calculo_multivariado" step="0.1" min="0" max="20"></label><br>
+    <label>CTD: <input type="number" name="ctd" step="0.1" min="0" max="20"></label><br>
+    <label>Ingeniería de Software: <input type="number" name="ingenieria_software" step="0.1" min="0" max="20"></label><br>
+    <label>Bases de Datos: <input type="number" name="bases_datos" step="0.1" min="0" max="20"></label><br>
+    <label>Control Análogo: <input type="number" name="control_analogo" step="0.1" min="0" max="20"></label><br>
+    <label>Circuitos Digitales: <input type="number" name="circuitos_digitales" step="0.1" min="0" max="20"></label><br><br>
+
+    <button type="submit">Guardar</button>
+</form>
+
+<script>
+    document.getElementById("form-estudiante").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = {};
+        formData.forEach((value, key) => {
+            data[key] = isNaN(value) ? value : parseFloat(value);
+        });
+
+        const res = await fetch("/api/estudiantes", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+            alert("Estudiante añadido correctamente");
+            window.location.href = "/";
+        } else {
