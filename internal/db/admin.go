@@ -41,7 +41,7 @@ func CreateTable() {
 }
 
 func DropTable() {
-	_, err := DB.Exec("DROP TABLE IF EXISTS personas;")
+	_, err := DB.Exec("DROP TABLE IF EXISTS dbpersonas;")
 	if err != nil {
 		log.Fatalf("❌ Error eliminando la tabla: %v", err)
 	} else {

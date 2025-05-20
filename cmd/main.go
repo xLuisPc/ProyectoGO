@@ -55,6 +55,13 @@ func main() {
 		http.ServeFile(w, r, "web/templates/index.html")
 	})
 
+	http.HandleFunc("/estadisticas", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "web/templates/estadisticas.html")
+	})
+
+	http.HandleFunc("/api/estadisticas", handlers.ObtenerClusters)
+	http.HandleFunc("/api/prediccion", handlers.PredecirCluster)
+
 	log.Println("Servidor en http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 
