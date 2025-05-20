@@ -81,20 +81,43 @@ async function actualizar() {
 }
 
 async function predecirCluster() {
+    const alerta = document.getElementById("alerta-prediccion");
+    alerta.innerHTML = "";
+
+    const campos = [
+        "genero_accion", "genero_ciencia_ficcion", "genero_comedia",
+        "genero_terror", "genero_documental", "genero_romance", "genero_musicales"
+    ];
+
+    let valido = true;
     const datos = {
-        carrera: document.getElementById("carreraPrediccion").value,
-        genero_accion: parseInt(document.getElementById("genero_accion").value),
-        genero_ciencia_ficcion: parseInt(document.getElementById("genero_ciencia_ficcion").value),
-        genero_comedia: parseInt(document.getElementById("genero_comedia").value),
-        genero_terror: parseInt(document.getElementById("genero_terror").value),
-        genero_documental: parseInt(document.getElementById("genero_documental").value),
-        genero_romance: parseInt(document.getElementById("genero_romance").value),
-        genero_musicales: parseInt(document.getElementById("genero_musicales").value)
+        carrera: document.getElementById("carreraPrediccion").value
     };
+
+    campos.forEach(id => {
+        const input = document.getElementById(id);
+        input.classList.remove("is-invalid");
+
+        const valor = input.value.trim();
+        const num = parseInt(valor);
+
+        if (valor === "" || isNaN(num) || num < 0 || num > 10) {
+            input.classList.add("is-invalid");
+            valido = false;
+        } else {
+            datos[id] = num;
+        }
+    });
+
+    if (!valido) {
+        mostrarAlertaPrediccion("❌ Verifica los campos marcados. Valores válidos: 0 a 10.", "danger");
+        return;
+    }
 
     ultimaPrediccion = datos;
     await predecirConDatos(datos);
 }
+
 
 async function predecirConDatos(datos) {
     const res = await fetch("/api/prediccion", {
@@ -133,6 +156,17 @@ function eliminarPrediccion() {
     document.getElementById("resultadoPrediccion").innerText = "";
 }
 
+function mostrarAlertaPrediccion(mensaje, tipo) {
+    const alerta = document.getElementById("alerta-prediccion");
+    alerta.innerHTML = `
+        <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+            ${mensaje}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+    `;
+}
+
+
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("genero").addEventListener("change", actualizar);
     document.getElementById("k").addEventListener("change", actualizar);
@@ -140,3 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector("button[onclick='eliminarPrediccion()']").addEventListener("click", eliminarPrediccion);
     actualizar();
 });
+
+
+
+

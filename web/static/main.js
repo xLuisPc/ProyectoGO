@@ -79,43 +79,70 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("form-estudiante").addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        const getValue = id => parseFloat(document.getElementById(id).value) || 0;
+        const alerta = document.getElementById("alerta-estudiante");
+        alerta.innerHTML = ""; // Limpiar alerta previa
 
-        const estudiante = {
-            carrera: document.getElementById("carrera").value,
-            genero_accion: parseInt(document.getElementById("genero_accion").value),
-            genero_ciencia_ficcion: parseInt(document.getElementById("genero_ciencia_ficcion").value),
-            genero_comedia: parseInt(document.getElementById("genero_comedia").value),
-            genero_terror: parseInt(document.getElementById("genero_terror").value),
-            genero_documental: parseInt(document.getElementById("genero_documental").value),
-            genero_romance: parseInt(document.getElementById("genero_romance").value),
-            genero_musicales: parseInt(document.getElementById("genero_musicales").value),
-            poo: getValue("poo"),
-            calculo_multivariado: getValue("calculo_multivariado"),
-            ctd: getValue("ctd"),
-            ingenieria_software: getValue("ingenieria_software"),
-            bases_datos: getValue("bases_datos"),
-            control_analogo: getValue("control_analogo"),
-            circuitos_digitales: getValue("circuitos_digitales")
+        const carrera = document.getElementById("carrera").value;
+        if (!carrera) {
+            mostrarAlerta("Debes seleccionar una carrera.", "danger");
+            return;
+        }
+
+        const camposGenero = [
+            "genero_accion", "genero_ciencia_ficcion", "genero_comedia",
+            "genero_terror", "genero_documental", "genero_romance", "genero_musicales"
+        ];
+
+        const camposNotas = [
+            "poo", "calculo_multivariado", "ctd",
+            "ingenieria_software", "bases_datos", "control_analogo", "circuitos_digitales"
+        ];
+
+        let datosValidos = true;
+
+        const getValue = (id, tipo) => {
+            const el = document.getElementById(id);
+            const valor = el.value.trim();
+            el.classList.remove("is-invalid");
+
+            if (valor === "") {
+                el.classList.add("is-invalid");
+                datosValidos = false;
+                return 0;
+            }
+
+            const num = tipo === "genero" ? parseInt(valor) : parseFloat(valor);
+            const valido = tipo === "genero" ? (num >= 0 && num <= 10) : (num >= 0 && num <= 5);
+
+            if (!valido || isNaN(num)) {
+                el.classList.add("is-invalid");
+                datosValidos = false;
+                return 0;
+            }
+
+            return num;
         };
 
-        const validNota = n => n >= 0 && n <= 5;
-        const validGenero = g => g >= 0 && g <= 10;
+        const estudiante = {
+            carrera,
+            genero_accion: getValue("genero_accion", "genero"),
+            genero_ciencia_ficcion: getValue("genero_ciencia_ficcion", "genero"),
+            genero_comedia: getValue("genero_comedia", "genero"),
+            genero_terror: getValue("genero_terror", "genero"),
+            genero_documental: getValue("genero_documental", "genero"),
+            genero_romance: getValue("genero_romance", "genero"),
+            genero_musicales: getValue("genero_musicales", "genero"),
+            poo: getValue("poo", "nota"),
+            calculo_multivariado: getValue("calculo_multivariado", "nota"),
+            ctd: getValue("ctd", "nota"),
+            ingenieria_software: getValue("ingenieria_software", "nota"),
+            bases_datos: getValue("bases_datos", "nota"),
+            control_analogo: getValue("control_analogo", "nota"),
+            circuitos_digitales: getValue("circuitos_digitales", "nota")
+        };
 
-        const notas = [
-            estudiante.poo, estudiante.calculo_multivariado, estudiante.ctd,
-            estudiante.ingenieria_software, estudiante.bases_datos,
-            estudiante.control_analogo, estudiante.circuitos_digitales
-        ];
-        const generos = [
-            estudiante.genero_accion, estudiante.genero_ciencia_ficcion,
-            estudiante.genero_comedia, estudiante.genero_terror,
-            estudiante.genero_documental, estudiante.genero_romance,
-            estudiante.genero_musicales
-        ];
-
-        if (!notas.every(validNota) || !generos.every(validGenero)) {
-            alert("Verifica que las notas estén entre 0-5 y los géneros entre 0-10.");
+        if (!datosValidos) {
+            mostrarAlerta("Revisa los campos marcados en rojo. Géneros deben estar entre 0 y 10, notas entre 0 y 5.", "danger");
             return;
         }
 
@@ -127,17 +154,18 @@ document.addEventListener("DOMContentLoaded", () => {
             });
 
             if (res.ok) {
-                alert("✅ Estudiante añadido correctamente");
-                window.location.reload();
+                mostrarAlerta("✅ Estudiante añadido correctamente.", "success");
+                setTimeout(() => window.location.reload(), 1500);
             } else {
                 const msg = await res.text();
-                alert("❌ Error al guardar: " + msg);
+                mostrarAlerta("❌ Error al guardar: " + msg, "danger");
             }
         } catch (err) {
-            alert("❌ Error de conexión con el servidor");
-            console.error(err);
+            mostrarAlerta("❌ Error de conexión con el servidor.", "danger");
         }
     });
+
+
 
     // Reset modal al abrir
     document.getElementById("modalEstudiante").addEventListener("show.bs.modal", function () {
@@ -145,3 +173,67 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("campos-restantes").style.display = "none";
     });
 });
+
+function mostrarInfoGenero(genero) {
+    const dataGeneros = {
+        accion: {
+            titulo: "Acción",
+            descripcion: "Películas con mucha adrenalina, peleas, explosiones y persecuciones.",
+            ejemplos: ["John Wick", "Mad Max: Fury Road", "Die Hard"]
+        },
+        comedia: {
+            titulo: "Comedia",
+            descripcion: "Películas diseñadas para provocar risa mediante situaciones divertidas.",
+            ejemplos: ["Superbad", "The Mask", "Mean Girls"]
+        },
+        ciencia_ficcion: {
+            titulo: "Ciencia Ficción",
+            descripcion: "Exploran mundos futuristas, tecnologías avanzadas o extraterrestres.",
+            ejemplos: ["Inception", "Interstellar", "Blade Runner"]
+        },
+        terror: {
+            titulo: "Terror",
+            descripcion: "Generan miedo o tensión a través de lo desconocido o sobrenatural.",
+            ejemplos: ["The Conjuring", "Hereditary", "It"]
+        },
+        documental: {
+            titulo: "Documental",
+            descripcion: "Exploran hechos reales o temas educativos de forma objetiva.",
+            ejemplos: ["13th", "The Social Dilemma", "Our Planet"]
+        },
+        romance: {
+            titulo: "Romance",
+            descripcion: "Cuentan historias centradas en relaciones amorosas.",
+            ejemplos: ["The Notebook", "Titanic", "La La Land"]
+        },
+        musicales: {
+            titulo: "Musicales",
+            descripcion: "Narrativas combinadas con música y coreografías.",
+            ejemplos: ["The Greatest Showman", "Mamma Mia!", "Les Misérables"]
+        }
+    };
+
+    const info = dataGeneros[genero];
+    document.getElementById('modalGeneroTitulo').textContent = info.titulo;
+    document.getElementById('modalGeneroDescripcion').textContent = info.descripcion;
+
+    const listaPeliculas = document.getElementById('modalGeneroPeliculas');
+    listaPeliculas.innerHTML = '';
+    info.ejemplos.forEach(pelicula => {
+        const li = document.createElement('li');
+        li.textContent = pelicula;
+        listaPeliculas.appendChild(li);
+    });
+}
+
+
+function mostrarAlerta(mensaje, tipo) {
+    const alerta = document.getElementById("alerta-estudiante");
+    alerta.innerHTML = `
+        <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+            ${mensaje}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+    `;
+}
+
