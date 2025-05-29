@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"github.com/xLuisPc/ProyectoGO/internal/db"
 	"github.com/xLuisPc/ProyectoGO/internal/models"
@@ -21,12 +22,36 @@ func CrearPersona(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Calcular promedio
-	suma := persona.Poo + persona.CalculoMultivariado + persona.Ctd + persona.IngenieriaSoftware +
-		persona.BasesDatos + persona.ControlAnalogo + persona.CircuitosDigitales
-	persona.Promedio = suma / 5
+	// Calcular promedio de campos no nulos
+	var suma float64
+	var cuenta int
 
-	// 🔹 Obtener el último ID actual y sumar 1
+	suma += persona.Poo
+	cuenta++
+	suma += persona.Ctd
+	cuenta++
+	suma += persona.CalculoMultivariado
+	cuenta++
+
+	if persona.IngenieriaSoftware != nil {
+		suma += *persona.IngenieriaSoftware
+		cuenta++
+	}
+	if persona.BasesDatos != nil {
+		suma += *persona.BasesDatos
+		cuenta++
+	}
+	if persona.ControlAnalogo != nil {
+		suma += *persona.ControlAnalogo
+		cuenta++
+	}
+	if persona.CircuitosDigitales != nil {
+		suma += *persona.CircuitosDigitales
+		cuenta++
+	}
+	persona.Promedio = suma / float64(cuenta)
+
+	// Obtener nuevo ID
 	var ultimoID int
 	err = db.DB.QueryRow("SELECT COALESCE(MAX(id), 0) FROM dbpersonas").Scan(&ultimoID)
 	if err != nil {
@@ -36,7 +61,7 @@ func CrearPersona(w http.ResponseWriter, r *http.Request) {
 	}
 	nuevoID := ultimoID + 1
 
-	// 🔹 Insertar incluyendo el nuevo ID generado
+	// Insertar con NullFloat64
 	query := `
         INSERT INTO dbpersonas (
             id, carrera, genero_accion, genero_ciencia_ficcion, genero_comedia,
@@ -58,10 +83,10 @@ func CrearPersona(w http.ResponseWriter, r *http.Request) {
 		persona.Poo,
 		persona.CalculoMultivariado,
 		persona.Ctd,
-		persona.IngenieriaSoftware,
-		persona.BasesDatos,
-		persona.ControlAnalogo,
-		persona.CircuitosDigitales,
+		nullFloat64(persona.IngenieriaSoftware),
+		nullFloat64(persona.BasesDatos),
+		nullFloat64(persona.ControlAnalogo),
+		nullFloat64(persona.CircuitosDigitales),
 		persona.Promedio,
 	)
 	if err != nil {
@@ -86,7 +111,7 @@ func ListarPersonas(w http.ResponseWriter, r *http.Request) {
         poo, calculo_multivariado, ctd, ingenieria_software, bases_datos,
         control_analogo, circuitos_digitales, promedio FROM dbpersonas`)
 	if err != nil {
-		log.Println("ERROR CONSULTA:", err) // Aquí se imprime el error en consola
+		log.Println("ERROR CONSULTA:", err)
 		http.Error(w, "Error al consultar la base de datos", http.StatusInternalServerError)
 		return
 	}
@@ -96,21 +121,47 @@ func ListarPersonas(w http.ResponseWriter, r *http.Request) {
 
 	for rows.Next() {
 		var p models.Persona
+		var ingSoft, bases, analogo, digitales sql.NullFloat64
+
 		err := rows.Scan(
 			&p.ID, &p.Carrera,
 			&p.GeneroAccion, &p.GeneroCienciaFiccion, &p.GeneroComedia, &p.GeneroTerror,
 			&p.GeneroDocumental, &p.GeneroRomance, &p.GeneroMusicales,
-			&p.Poo, &p.CalculoMultivariado, &p.Ctd, &p.IngenieriaSoftware, &p.BasesDatos,
-			&p.ControlAnalogo, &p.CircuitosDigitales, &p.Promedio,
+			&p.Poo, &p.CalculoMultivariado, &p.Ctd,
+			&ingSoft, &bases, &analogo, &digitales,
+			&p.Promedio,
 		)
 		if err != nil {
-			log.Println("ERROR SCAN:", err) // También puedes agregar esto por si hay error al leer filas
+			log.Println("ERROR SCAN:", err)
 			http.Error(w, "Error al leer resultados", http.StatusInternalServerError)
 			return
 		}
+
+		// Asignar si es válido
+		if ingSoft.Valid {
+			p.IngenieriaSoftware = &ingSoft.Float64
+		}
+		if bases.Valid {
+			p.BasesDatos = &bases.Float64
+		}
+		if analogo.Valid {
+			p.ControlAnalogo = &analogo.Float64
+		}
+		if digitales.Valid {
+			p.CircuitosDigitales = &digitales.Float64
+		}
+
 		personas = append(personas, p)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(personas)
+}
+
+// Función auxiliar para convertir *float64 en sql.NullFloat64
+func nullFloat64(val *float64) sql.NullFloat64 {
+	if val != nil {
+		return sql.NullFloat64{Float64: *val, Valid: true}
+	}
+	return sql.NullFloat64{Valid: false}
 }

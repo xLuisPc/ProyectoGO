@@ -12,7 +12,7 @@ type Cluster struct {
 	Personas []models.Persona
 }
 
-// KMeansPorGenero aplica clustering sobre afinidad por un género + notas
+// KMeansPorGenero agrupa estudiantes según afinidad a un género + notas, ignorando campos nulos
 func KMeansPorGenero(personas []models.Persona, genero string, k int) []Cluster {
 	rand.Seed(time.Now().UnixNano())
 
@@ -40,46 +40,50 @@ func KMeansPorGenero(personas []models.Persona, genero string, k int) []Cluster 
 
 		entry := []float64{
 			afinidad,
-			p.Poo, p.CalculoMultivariado, p.Ctd, p.IngenieriaSoftware,
-			p.BasesDatos, p.ControlAnalogo, p.CircuitosDigitales, p.Promedio,
+			p.Poo,
+			p.CalculoMultivariado,
+			p.Ctd,
+			nullToNaN(p.IngenieriaSoftware),
+			nullToNaN(p.BasesDatos),
+			nullToNaN(p.ControlAnalogo),
+			nullToNaN(p.CircuitosDigitales),
+			p.Promedio,
 		}
 		dataset = append(dataset, entry)
 	}
 
-	// Inicializar centroides aleatorios
 	centroids := make([][]float64, k)
 	for i := 0; i < k; i++ {
 		centroids[i] = dataset[rand.Intn(len(dataset))]
 	}
 
 	assignments := make([]int, len(dataset))
-	maxIter := 100
-
-	for iter := 0; iter < maxIter; iter++ {
-		// Asignar puntos al cluster más cercano
+	for iter := 0; iter < 100; iter++ {
 		for i, point := range dataset {
 			minDist := math.MaxFloat64
 			for j, centroid := range centroids {
-				dist := euclidean(point, centroid)
-				if dist < minDist {
+				if dist := euclideanIgnoreNaN(point, centroid); dist < minDist {
 					minDist = dist
 					assignments[i] = j
 				}
 			}
 		}
 
-		// Recalcular centroides
 		newCentroids := make([][]float64, k)
 		counts := make([]int, k)
 		for i := 0; i < k; i++ {
 			newCentroids[i] = make([]float64, len(dataset[0]))
 		}
+
 		for i, cluster := range assignments {
 			for j := range dataset[i] {
-				newCentroids[cluster][j] += dataset[i][j]
+				if !math.IsNaN(dataset[i][j]) {
+					newCentroids[cluster][j] += dataset[i][j]
+				}
 			}
 			counts[cluster]++
 		}
+
 		for i := 0; i < k; i++ {
 			for j := range newCentroids[i] {
 				if counts[i] > 0 {
@@ -90,7 +94,6 @@ func KMeansPorGenero(personas []models.Persona, genero string, k int) []Cluster 
 		centroids = newCentroids
 	}
 
-	// Agrupar estudiantes según cluster asignado
 	clusters := make([]Cluster, k)
 	for i := range clusters {
 		clusters[i].ID = i
@@ -102,73 +105,6 @@ func KMeansPorGenero(personas []models.Persona, genero string, k int) []Cluster 
 	return clusters
 }
 
-// Calcula la distancia euclidiana entre dos vectores
-func euclidean(a, b []float64) float64 {
-	var sum float64
-	for i := range a {
-		diff := a[i] - b[i]
-		sum += diff * diff
-	}
-	return math.Sqrt(sum)
-}
-
-func PredecirClusterPorGustos(dataset [][]float64, nuevo []float64, k int) int {
-	// Inicializar centroides
-	rand.Seed(time.Now().UnixNano())
-	centroids := make([][]float64, k)
-	for i := 0; i < k; i++ {
-		centroids[i] = dataset[rand.Intn(len(dataset))]
-	}
-
-	assignments := make([]int, len(dataset))
-
-	// Entrenamiento K-means (solo sobre gustos)
-	for iter := 0; iter < 100; iter++ {
-		// Asignar a cluster más cercano
-		for i, punto := range dataset {
-			minDist := math.MaxFloat64
-			for j, centro := range centroids {
-				if d := euclidean(punto, centro); d < minDist {
-					minDist = d
-					assignments[i] = j
-				}
-			}
-		}
-
-		// Recalcular centroides
-		newCentroids := make([][]float64, k)
-		counts := make([]int, k)
-		for i := 0; i < k; i++ {
-			newCentroids[i] = make([]float64, len(dataset[0]))
-		}
-		for i, c := range assignments {
-			for j := range dataset[i] {
-				newCentroids[c][j] += dataset[i][j]
-			}
-			counts[c]++
-		}
-		for i := 0; i < k; i++ {
-			if counts[i] > 0 {
-				for j := range newCentroids[i] {
-					newCentroids[i][j] /= float64(counts[i])
-				}
-			}
-		}
-		centroids = newCentroids
-	}
-
-	// Predecir el cluster más cercano para el nuevo perfil
-	minDist := math.MaxFloat64
-	clusterAsignado := 0
-	for j, centro := range centroids {
-		if d := euclidean(nuevo, centro); d < minDist {
-			minDist = d
-			clusterAsignado = j
-		}
-	}
-	return clusterAsignado
-}
-
 func PredecirClusterPorGustosConPromedios(dataset [][]float64, nuevo []float64, k int) (int, []int) {
 	rand.Seed(time.Now().UnixNano())
 
@@ -178,12 +114,11 @@ func PredecirClusterPorGustosConPromedios(dataset [][]float64, nuevo []float64, 
 	}
 
 	assignments := make([]int, len(dataset))
-
 	for iter := 0; iter < 100; iter++ {
 		for i, punto := range dataset {
 			minDist := math.MaxFloat64
 			for j, centro := range centroids {
-				if d := euclidean(punto, centro); d < minDist {
+				if d := euclideanIgnoreNaN(punto, centro); d < minDist {
 					minDist = d
 					assignments[i] = j
 				}
@@ -197,13 +132,15 @@ func PredecirClusterPorGustosConPromedios(dataset [][]float64, nuevo []float64, 
 		}
 		for i, c := range assignments {
 			for j := range dataset[i] {
-				newCentroids[c][j] += dataset[i][j]
+				if !math.IsNaN(dataset[i][j]) {
+					newCentroids[c][j] += dataset[i][j]
+				}
 			}
 			counts[c]++
 		}
 		for i := 0; i < k; i++ {
-			if counts[i] > 0 {
-				for j := range newCentroids[i] {
+			for j := range newCentroids[i] {
+				if counts[i] > 0 {
 					newCentroids[i][j] /= float64(counts[i])
 				}
 			}
@@ -211,14 +148,40 @@ func PredecirClusterPorGustosConPromedios(dataset [][]float64, nuevo []float64, 
 		centroids = newCentroids
 	}
 
-	// Predecir cluster del nuevo
+	// Predecir cluster para el nuevo vector
 	minDist := math.MaxFloat64
 	clusterAsignado := 0
 	for j, centro := range centroids {
-		if d := euclidean(nuevo, centro); d < minDist {
+		if d := euclideanIgnoreNaN(nuevo, centro); d < minDist {
 			minDist = d
 			clusterAsignado = j
 		}
 	}
 	return clusterAsignado, assignments
+}
+
+// Utilidades
+
+func nullToNaN(f *float64) float64 {
+	if f != nil {
+		return *f
+	}
+	return math.NaN()
+}
+
+func euclideanIgnoreNaN(a, b []float64) float64 {
+	var sum float64
+	count := 0
+	for i := range a {
+		if math.IsNaN(a[i]) || math.IsNaN(b[i]) {
+			continue
+		}
+		diff := a[i] - b[i]
+		sum += diff * diff
+		count++
+	}
+	if count == 0 {
+		return math.MaxFloat64
+	}
+	return math.Sqrt(sum)
 }

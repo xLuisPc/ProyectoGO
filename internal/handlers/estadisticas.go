@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"github.com/xLuisPc/ProyectoGO/internal/db"
 	"github.com/xLuisPc/ProyectoGO/internal/models"
@@ -17,7 +18,6 @@ func ObtenerClusters(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Leer K desde la URL
 	k := 3 // valor por defecto
 	if kStr := r.URL.Query().Get("k"); kStr != "" {
 		if parsed, err := strconv.Atoi(kStr); err == nil && parsed >= 2 && parsed <= 10 {
@@ -29,7 +29,13 @@ func ObtenerClusters(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("✅ Generando clusters con género:", genero, "y K =", k)
 
-	rows, err := db.DB.Query("SELECT * FROM dbpersonas")
+	rows, err := db.DB.Query(`SELECT 
+		id, carrera, genero_accion, genero_ciencia_ficcion, genero_comedia,
+		genero_terror, genero_documental, genero_romance, genero_musicales,
+		poo, calculo_multivariado, ctd, 
+		ingenieria_software, bases_datos, control_analogo, circuitos_digitales,
+		promedio 
+		FROM dbpersonas`)
 	if err != nil {
 		log.Println("❌ Error al obtener personas:", err)
 		http.Error(w, "Error al consultar la base de datos", http.StatusInternalServerError)
@@ -40,19 +46,39 @@ func ObtenerClusters(w http.ResponseWriter, r *http.Request) {
 	var personas []models.Persona
 	for rows.Next() {
 		var p models.Persona
-		err := rows.Scan(&p.ID, &p.Carrera, &p.GeneroAccion, &p.GeneroCienciaFiccion,
-			&p.GeneroComedia, &p.GeneroTerror, &p.GeneroDocumental, &p.GeneroRomance,
-			&p.GeneroMusicales, &p.Poo, &p.CalculoMultivariado, &p.Ctd, &p.IngenieriaSoftware,
-			&p.BasesDatos, &p.ControlAnalogo, &p.CircuitosDigitales, &p.Promedio)
+		var ingSoft, bases, analogo, digitales sql.NullFloat64
+
+		err := rows.Scan(
+			&p.ID, &p.Carrera,
+			&p.GeneroAccion, &p.GeneroCienciaFiccion, &p.GeneroComedia,
+			&p.GeneroTerror, &p.GeneroDocumental, &p.GeneroRomance, &p.GeneroMusicales,
+			&p.Poo, &p.CalculoMultivariado, &p.Ctd,
+			&ingSoft, &bases, &analogo, &digitales,
+			&p.Promedio,
+		)
 		if err != nil {
 			log.Println("❌ Error al escanear persona:", err)
 			http.Error(w, "Error al procesar resultados", http.StatusInternalServerError)
 			return
 		}
+
+		// Convertir NullFloat64 a punteros
+		if ingSoft.Valid {
+			p.IngenieriaSoftware = &ingSoft.Float64
+		}
+		if bases.Valid {
+			p.BasesDatos = &bases.Float64
+		}
+		if analogo.Valid {
+			p.ControlAnalogo = &analogo.Float64
+		}
+		if digitales.Valid {
+			p.CircuitosDigitales = &digitales.Float64
+		}
+
 		personas = append(personas, p)
 	}
 
-	// Llamar a K-means
 	clusters := services.KMeansPorGenero(personas, genero, k)
 
 	w.Header().Set("Content-Type", "application/json")

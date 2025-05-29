@@ -48,22 +48,27 @@ function generarResumen(clusters, genero) {
     tbody.innerHTML = "";
 
     clusters.forEach((cluster, i) => {
-        const n = cluster.Personas.length || 1;
-        const promedio = campo => cluster.Personas.reduce((sum, p) => sum + p[campo], 0) / n;
+        const n = cluster.Personas.length;
+
+        const promedio = campo => {
+            const valores = cluster.Personas.map(p => p[campo]).filter(v => typeof v === "number");
+            if (valores.length === 0) return "—";
+            return (valores.reduce((sum, v) => sum + v, 0) / valores.length).toFixed(2);
+        };
 
         const fila = document.createElement("tr");
         fila.innerHTML = `
             <td><b>${i + 1}</b></td>
             <td>${n}</td>
-            <td>${promedio(genero).toFixed(2)}</td>
-            <td>${promedio("poo").toFixed(2)}</td>
-            <td>${promedio("ctd").toFixed(2)}</td>
-            <td>${promedio("calculo_multivariado").toFixed(2)}</td>
-            <td>${promedio("ingenieria_software").toFixed(2)}</td>
-            <td>${promedio("bases_datos").toFixed(2)}</td>
-            <td>${promedio("control_analogo").toFixed(2)}</td>
-            <td>${promedio("circuitos_digitales").toFixed(2)}</td>
-            <td>${promedio("promedio").toFixed(2)}</td>
+            <td>${promedio(genero)}</td>
+            <td>${promedio("poo")}</td>
+            <td>${promedio("ctd")}</td>
+            <td>${promedio("calculo_multivariado")}</td>
+            <td>${promedio("ingenieria_software")}</td>
+            <td>${promedio("bases_datos")}</td>
+            <td>${promedio("control_analogo")}</td>
+            <td>${promedio("circuitos_digitales")}</td>
+            <td>${promedio("promedio")}</td>
         `;
         tbody.appendChild(fila);
     });
@@ -118,7 +123,6 @@ async function predecirCluster() {
     await predecirConDatos(datos);
 }
 
-
 async function predecirConDatos(datos) {
     const res = await fetch("/api/prediccion", {
         method: "POST",
@@ -147,6 +151,32 @@ async function predecirConDatos(datos) {
 
     document.getElementById("resultadoPrediccion").innerText =
         `🔍 Este perfil pertenece al Cluster ${clusterID + 1} | Estudiantes similares tienen un promedio de ${promedio.toFixed(2)}`;
+
+    // Mostrar tabla de notas estimadas por materia
+    const materias = resultado.materias || {};
+    const contenedorNotas = document.getElementById("notas-estimadas");
+    contenedorNotas.innerHTML = `
+        <table class="table table-sm table-bordered text-center mt-3">
+            <thead class="table-light"><tr>
+                <th>POO</th><th>CTD</th><th>Cálculo</th>
+                <th>Ing. Software</th><th>Bases de Datos</th>
+                <th>Control Análogo</th><th>Circuitos Digitales</th>
+            </tr></thead>
+            <tbody><tr>
+                <td>${formatearNota(materias.poo)}</td>
+                <td>${formatearNota(materias.ctd)}</td>
+                <td>${formatearNota(materias.calculo_multivariado)}</td>
+                <td>${formatearNota(materias.ingenieria_software)}</td>
+                <td>${formatearNota(materias.bases_datos)}</td>
+                <td>${formatearNota(materias.control_analogo)}</td>
+                <td>${formatearNota(materias.circuitos_digitales)}</td>
+            </tr></tbody>
+        </table>
+    `;
+}
+
+function formatearNota(valor) {
+    return typeof valor === "number" ? valor.toFixed(2) : "—";
 }
 
 function eliminarPrediccion() {
@@ -154,6 +184,7 @@ function eliminarPrediccion() {
     chart.data.datasets = chart.data.datasets.filter(d => d.label !== "Predicción");
     chart.update();
     document.getElementById("resultadoPrediccion").innerText = "";
+    document.getElementById("notas-estimadas").innerHTML = "";
 }
 
 function mostrarAlertaPrediccion(mensaje, tipo) {
@@ -166,7 +197,6 @@ function mostrarAlertaPrediccion(mensaje, tipo) {
     `;
 }
 
-
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("genero").addEventListener("change", actualizar);
     document.getElementById("k").addEventListener("change", actualizar);
@@ -174,7 +204,3 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector("button[onclick='eliminarPrediccion()']").addEventListener("click", eliminarPrediccion);
     actualizar();
 });
-
-
-
-
